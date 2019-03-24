@@ -259,3 +259,10 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+/Assets/GoogleARCore
+/Assets/PlayServicesResolver/Editor
+/.gradle
+/Library
+/ProjectSettings
+/Temp
+/Builds
