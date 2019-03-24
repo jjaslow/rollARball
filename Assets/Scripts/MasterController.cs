@@ -42,6 +42,7 @@ namespace GoogleARCore.Examples.HelloAR
         /// </summary>
         public GameObject DetectedPlanePrefab;
         Anchor anchor;
+        int trackNumber;
 
         public GameObject myPrefab;
         public GameObject myBall;
@@ -61,6 +62,7 @@ namespace GoogleARCore.Examples.HelloAR
         private void Start()
         {
             myPrefab = myTrack;
+            trackNumber = 0;
         }
 
         public void Update()
@@ -104,7 +106,9 @@ namespace GoogleARCore.Examples.HelloAR
                     // world evolves.
                     if (nudge == 0) // nudge==0 indicates a track
                     {
-                        Pose anchorPose = new Pose(nudgedPosition, Quaternion.identity);
+                        myBall.name = "Track#" + trackNumber;
+                        trackNumber++;
+                        Pose anchorPose = new Pose(nudgedPosition, Quaternion.Euler(0, 0, 0));
                         anchor = hit.Trackable.CreateAnchor(anchorPose);  //hit.Pose
 
                         // Make myBall model a child of the anchor.
@@ -113,6 +117,12 @@ namespace GoogleARCore.Examples.HelloAR
                     
                 }
             }
+        }
+
+        public void NewTrack()
+        {
+
+
         }
 
         /// <summary>

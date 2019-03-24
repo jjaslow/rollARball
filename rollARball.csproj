@@ -814,6 +814,10 @@
     <Compile Include="Assets\GoogleARCore\SDK\Scripts\XPSession.cs" />
     <Compile Include="Assets\GoogleARCore\SDK\Scripts\XPSessionStatus.cs" />
     <Compile Include="Assets\GoogleARCore\SDK\Scripts\XPTrackingState.cs" />
+    <Compile Include="Assets\Scripts\BallMotion.cs" />
+    <Compile Include="Assets\Scripts\MasterController.cs" />
+    <Compile Include="Assets\Scripts\MasterUI.cs" />
+    <Compile Include="Assets\Scripts\testing.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\GoogleARCore\Editor\ARCoreiOSDependencies.template" />

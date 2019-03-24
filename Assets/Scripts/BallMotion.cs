@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class BallMotion : MonoBehaviour
 {
@@ -9,6 +10,7 @@ public class BallMotion : MonoBehaviour
     private Vector3 currentAcceleration, initialAcceleration;
     private float initialXAcceleration, initialYAcceleration;
     RaycastHit hit;
+    Text testingText;
 
     void Start()
     {
@@ -17,6 +19,8 @@ public class BallMotion : MonoBehaviour
         initialXAcceleration = Input.acceleration.x;
         initialYAcceleration = Input.acceleration.y;
         smooth = 0.05f;
+        testingText = GameObject.Find("TestingText").GetComponent<Text>();
+        testingText.text = null;
     }
 
     // Update is called once per frame
@@ -50,5 +54,6 @@ public class BallMotion : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         Debug.Log("trigger: " + other.name);
+        testingText.text = other.name;
     }
 }
