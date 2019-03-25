@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using GoogleARCore.Examples.HelloAR;
 
 public class BallMotion : MonoBehaviour
 {
@@ -11,6 +12,7 @@ public class BallMotion : MonoBehaviour
     private float initialXAcceleration, initialYAcceleration;
     RaycastHit hit;
     Text testingText;
+    public MasterController MCScript;
 
     void Start()
     {
@@ -20,20 +22,21 @@ public class BallMotion : MonoBehaviour
         initialYAcceleration = Input.acceleration.y;
         smooth = 0.05f;
         testingText = GameObject.Find("TestingText").GetComponent<Text>();
+        MCScript = GameObject.Find("Example Controller").GetComponent<MasterController>();
         testingText.text = null;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (transform.position.y < -5)
+        if (transform.position.y < -5)  //based on gravity
         {
             Destroy(gameObject);
             return;
         }
 
         Debug.DrawRay(transform.position, Vector3.down * 10, Color.red);
-        if(!Physics.Raycast(transform.position, Vector3.down, out hit))
+        if(!Physics.Raycast(transform.position, Vector3.down, out hit))  //no gravity, based on looking down to see track
         {
             Destroy(gameObject);
             return;
@@ -53,7 +56,8 @@ public class BallMotion : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log("trigger: " + other.name);
-        testingText.text = other.name;
-    }
+        Destroy(other);
+        //testingText.text = other.name;
+        MCScript.NewTrack(other.name);
+}
 }

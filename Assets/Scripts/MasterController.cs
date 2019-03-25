@@ -42,12 +42,14 @@ namespace GoogleARCore.Examples.HelloAR
         /// </summary>
         public GameObject DetectedPlanePrefab;
         Anchor anchor;
-        int trackNumber;
 
-        public GameObject myPrefab;
+        //public GameObject myPrefab;
         public GameObject myBall;
         public GameObject myTrack;
-        public float nudge = 0;
+
+        int trackNumber = 0;
+        bool gameStarted = false;
+        Vector3 trackStart;
 
         /// <summary>
         /// The rotation in degrees need to apply to model when the Andy model is placed.
@@ -58,12 +60,6 @@ namespace GoogleARCore.Examples.HelloAR
         /// True if the app is in the process of quitting due to an ARCore connection error, otherwise false.
         /// </summary>
         private bool m_IsQuitting = false;
-
-        private void Start()
-        {
-            myPrefab = myTrack;
-            trackNumber = 0;
-        }
 
         public void Update()
         {
@@ -81,7 +77,7 @@ namespace GoogleARCore.Examples.HelloAR
             TrackableHitFlags raycastFilter = TrackableHitFlags.PlaneWithinPolygon |
                 TrackableHitFlags.FeaturePointWithSurfaceNormal;
 
-            if (Frame.Raycast(touch.position.x, touch.position.y, raycastFilter, out hit))
+            if (Frame.Raycast(touch.position.x, touch.position.y, raycastFilter, out hit) && !gameStarted)
             {
                 // Use hit pose and camera pose to check if hittest is from the
                 // back of the plane, if it is, no need to create the anchor.
@@ -93,36 +89,66 @@ namespace GoogleARCore.Examples.HelloAR
                 }
                 else
                 {
-                    // Instantiate myBall model at the hit pose.
-                    Vector3 nudgedPosition = new Vector3(hit.Pose.position.x, hit.Pose.position.y + nudge, hit.Pose.position.z);
-                    myBall = Instantiate(myPrefab, nudgedPosition, Quaternion.identity);  //hit.Pose.rotation   (new idea, rotation = camera.forward?)
-                    //myBall.transform.Rotate(Vector3.forward); //y: k_ModelRotation  z: Space.Self
-                    Debug.Log("New " + myPrefab + ": " + hit.Pose.position + " / " + hit.Pose.rotation.eulerAngles);
+                    // Instantiate track at the hit pose.
+                    trackStart = hit.Pose.position;
+                    GameObject myPrefab = Instantiate(myTrack, trackStart, Quaternion.identity);  //hit.Pose.rotation   (new idea, rotation = camera.forward?)
+                    //myPrefab.transform.Rotate(Vector3.forward); //y: k_ModelRotation  z: Space.Self
+                    myPrefab.name = "Track#" + trackNumber;
+                    trackNumber++;
+                    Debug.Log("New " + myTrack + ": " + trackStart + " / " + hit.Pose.rotation.eulerAngles);
 
-                    // Compensate for the hitPose rotation facing away from the raycast (i.e. camera).
-                    
-
-                    // Create an anchor to allow ARCore to track the hitpoint as understanding of the physical
+                    // Create an anchor FOR TRACK to allow ARCore to track the hitpoint as understanding of the physical
                     // world evolves.
-                    if (nudge == 0) // nudge==0 indicates a track
-                    {
-                        myBall.name = "Track#" + trackNumber;
-                        trackNumber++;
-                        Pose anchorPose = new Pose(nudgedPosition, Quaternion.Euler(0, 0, 0));
+                        Pose anchorPose = new Pose(trackStart, Quaternion.Euler(0, 0, 0));
                         anchor = hit.Trackable.CreateAnchor(anchorPose);  //hit.Pose
+                    // Make myBall model a child of the anchor.
+                        myPrefab.transform.parent = anchor.transform;
+          
 
-                        // Make myBall model a child of the anchor.
-                        myBall.transform.parent = anchor.transform;
-                    }
-                    
+                    // Instantiate ball at the hit pose.
+                    float nudgeUp = .1f;
+                    Vector3 nudgedPosition = new Vector3(trackStart.x, trackStart.y + nudgeUp, trackStart.z);
+                    GameObject myPrefab2 = Instantiate(myBall, nudgedPosition, Quaternion.identity);  //hit.Pose.rotation   (new idea, rotation = camera.forward?)
+                    //myPrefab2.transform.Rotate(Vector3.forward); //y: k_ModelRotation  z: Space.Self
+                    Debug.Log("New " + myBall + ": " + hit.Pose.position + " / " + hit.Pose.rotation.eulerAngles);
+
+                    gameStarted = true;
                 }
             }
         }
 
-        public void NewTrack()
+        public void ReloadBall()
         {
+            float nudgeUp = .1f;
+            Vector3 nudgedPosition = new Vector3(trackStart.x, trackStart.y + nudgeUp, trackStart.z);
+            GameObject myPrefab2 = Instantiate(myBall, nudgedPosition, Quaternion.identity);  //hit.Pose.rotation   (new idea, rotation = camera.forward?)
+            Debug.Log("Reload " + myBall);
+
+        }
 
 
+        public void NewTrack(string coll)
+        {
+            Debug.Log("trigger: " + coll);
+            float newTrackPositionAdjust;
+            newTrackPositionAdjust = coll == "TriggerF" ? .6f : -.6f; //length of track piece
+            Debug.Log(newTrackPositionAdjust);
+
+            GameObject myPrefab = Instantiate(myTrack, trackStart, Quaternion.identity);  //hit.Pose.rotation   (new idea, rotation = camera.forward?)
+            myPrefab.transform.Translate(Vector3.forward * (newTrackPositionAdjust * trackNumber));
+
+            if (coll == "TriggerF") //destroy back trigger on new track
+            {
+                Destroy(myPrefab.gameObject.transform.GetChild(1).GetComponent<BoxCollider>());
+            }
+            else  //destroy front trigger on new track
+            {
+                Destroy(myPrefab.gameObject.transform.GetChild(0).GetComponent<BoxCollider>());
+            }
+
+            myPrefab.name = "Track#" + trackNumber;
+            trackNumber++;
+            myPrefab.transform.parent = anchor.transform;
         }
 
         /// <summary>

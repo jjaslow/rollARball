@@ -356,7 +356,7 @@ MonoBehaviour:
       Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 14
+    m_FontSize: 12
     m_FontStyle: 0
     m_BestFit: 0
     m_MinSize: 10
@@ -367,7 +367,11 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Set track
+  m_Text: 'Reload
+
+    Ball at
+
+    Start'
 --- !u!222 &504283680
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -423,10 +427,8 @@ MonoBehaviour:
   FirstPersonCamera: {fileID: 896679035}
   DetectedPlanePrefab: {fileID: 1654175882956584, guid: 6a35c744e5010405c847fad90282d2be,
     type: 3}
-  myPrefab: {fileID: 0}
   myBall: {fileID: 6196640021426412045, guid: 32ab21bb3e3c7e9439da1bac9d61b68f, type: 3}
   myTrack: {fileID: 4281276511772330868, guid: 8b309ed7fdc87e947a382523a436372d, type: 3}
-  nudge: 0
 --- !u!114 &627916104
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -502,7 +504,7 @@ GameObject:
   - component: {fileID: 1068112040}
   - component: {fileID: 1068112039}
   m_Layer: 5
-  m_Name: SetTrack
+  m_Name: ReloadBall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -568,8 +570,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 627916104}
-        m_MethodName: SetTrackAsPrefab
+      - m_Target: {fileID: 627916103}
+        m_MethodName: ReloadBall
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -652,7 +654,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -80, y: 276}
+  m_AnchoredPosition: {x: -99.7, y: 122.1}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1117916082
@@ -677,18 +679,18 @@ MonoBehaviour:
       Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 14
+    m_FontSize: 32
     m_FontStyle: 0
     m_BestFit: 0
-    m_MinSize: 10
+    m_MinSize: 3
     m_MaxSize: 40
-    m_Alignment: 0
+    m_Alignment: 2
     m_AlignByGeometry: 0
     m_RichText: 1
     m_HorizontalOverflow: 0
-    m_VerticalOverflow: 0
+    m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: 
+  m_Text: fgdfgdfgdg
 --- !u!222 &1117916083
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -828,7 +830,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1446822255
 RectTransform:
   m_ObjectHideFlags: 0

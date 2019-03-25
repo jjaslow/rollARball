@@ -9,15 +9,16 @@ public class MasterUI : MonoBehaviour
     public GameObject myTrack;
     public GameObject myBall;
 
-    public void SetTrackAsPrefab()
+    public void ReloadBall() //now reload
     {
-        MCScript.myPrefab = myTrack;
-        MCScript.nudge = 0;
+        //MCScript.myPrefab = myTrack;
+        //MCScript.nudge = 0;
+        MCScript.ReloadBall();
     }
 
     public void SetBallAsPrefab()
     {
-        MCScript.myPrefab = myBall;
-        MCScript.nudge = 0.05f;
+        //MCScript.myPrefab = myBall;
+        //MCScript.nudge = 0.05f;
     }
 }
