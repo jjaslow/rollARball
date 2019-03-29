@@ -47,9 +47,10 @@ namespace GoogleARCore.Examples.HelloAR
         public GameObject myBall;
         public GameObject myTrack;
 
-        int trackNumber = 0;
+        public int trackNumber = 0;
         bool gameStarted = false;
         Vector3 trackStart;
+        Quaternion trackRotation;
 
         /// <summary>
         /// The rotation in degrees need to apply to model when the Andy model is placed.
@@ -91,53 +92,58 @@ namespace GoogleARCore.Examples.HelloAR
                 {
                     // Instantiate track at the hit pose.
                     trackStart = hit.Pose.position;
-                    GameObject myPrefab = Instantiate(myTrack, trackStart, Quaternion.identity);  //hit.Pose.rotation   (new idea, rotation = camera.forward?)
-                    //myPrefab.transform.Rotate(Vector3.forward); //y: k_ModelRotation  z: Space.Self
+                    trackRotation = hit.Pose.rotation;
+                    trackRotation.y = 0;
+                    Debug.Log("hit position: " + trackStart + "  hit rotation: " + trackRotation.eulerAngles);
+                    GameObject myPrefab = Instantiate(myTrack, trackStart, trackRotation);  //hit.Pose.rotation 
                     myPrefab.name = "Track#" + trackNumber;
                     trackNumber++;
-                    Debug.Log("New " + myTrack + ": " + trackStart + " / " + hit.Pose.rotation.eulerAngles);
 
                     // Create an anchor FOR TRACK to allow ARCore to track the hitpoint as understanding of the physical
                     // world evolves.
-                        Pose anchorPose = new Pose(trackStart, Quaternion.Euler(0, 0, 0));
-                        anchor = hit.Trackable.CreateAnchor(anchorPose);  //hit.Pose
+                    Pose anchorPose = new Pose(trackStart, trackRotation);
+                    anchor = hit.Trackable.CreateAnchor(anchorPose);
+                    Debug.Log("Anchor Pose: " + anchor.transform.position + anchor.transform.rotation.eulerAngles);
+
                     // Make myBall model a child of the anchor.
-                        myPrefab.transform.parent = anchor.transform;
-          
+                    Debug.Log("track pose b4 anchor: " + myPrefab.transform.position + myPrefab.transform.rotation.eulerAngles);
+                    myPrefab.transform.parent = anchor.transform;
+                    Debug.Log("track pose after anchor: " + myPrefab.transform.position + myPrefab.transform.rotation.eulerAngles);
+
 
                     // Instantiate ball at the hit pose.
-                    float nudgeUp = .1f;
+                    float nudgeUp = .05f;   //0.05
                     Vector3 nudgedPosition = new Vector3(trackStart.x, trackStart.y + nudgeUp, trackStart.z);
-                    GameObject myPrefab2 = Instantiate(myBall, nudgedPosition, Quaternion.identity);  //hit.Pose.rotation   (new idea, rotation = camera.forward?)
-                    //myPrefab2.transform.Rotate(Vector3.forward); //y: k_ModelRotation  z: Space.Self
-                    Debug.Log("New " + myBall + ": " + hit.Pose.position + " / " + hit.Pose.rotation.eulerAngles);
+                    GameObject myPrefab2 = Instantiate(myBall, nudgedPosition, trackRotation);  //hit.Pose.rotation   (new idea, rotation = camera.forward?)
 
                     gameStarted = true;
                 }
             }
         }
-
+        
         public void ReloadBall()
         {
-            float nudgeUp = .1f;
+            float nudgeUp = .05f;
             Vector3 nudgedPosition = new Vector3(trackStart.x, trackStart.y + nudgeUp, trackStart.z);
-            GameObject myPrefab2 = Instantiate(myBall, nudgedPosition, Quaternion.identity);  //hit.Pose.rotation   (new idea, rotation = camera.forward?)
+            GameObject myPrefab2 = Instantiate(myBall, nudgedPosition, trackRotation);  //hit.Pose.rotation   (new idea, rotation = camera.forward?)
             Debug.Log("Reload " + myBall);
 
         }
 
 
-        public void NewTrack(string coll)
+        public void NewTrack(Collider coll)
         {
-            Debug.Log("trigger: " + coll);
+            Debug.Log("trigger: " + coll.name);
             float newTrackPositionAdjust;
-            newTrackPositionAdjust = coll == "TriggerF" ? .6f : -.6f; //length of track piece
-            Debug.Log(newTrackPositionAdjust);
+            float trackLength = coll.gameObject.transform.parent.GetComponent<Collider>().bounds.extents.z;
+            Debug.Log("track length: " + trackLength);
+            newTrackPositionAdjust = coll.name == "TriggerF" ? trackLength*2 : trackLength*-2; //length of track piece
 
-            GameObject myPrefab = Instantiate(myTrack, trackStart, Quaternion.identity);  //hit.Pose.rotation   (new idea, rotation = camera.forward?)
-            myPrefab.transform.Translate(Vector3.forward * (newTrackPositionAdjust * trackNumber));
+            GameObject myPrefab = Instantiate(myTrack, coll.gameObject.transform.parent.position, coll.gameObject.transform.parent.rotation);
+            myPrefab.transform.parent = anchor.transform;
+            myPrefab.transform.Translate(Vector3.forward * newTrackPositionAdjust);
 
-            if (coll == "TriggerF") //destroy back trigger on new track
+            if (coll.name == "TriggerF") //destroy back trigger on new track
             {
                 Destroy(myPrefab.gameObject.transform.GetChild(1).GetComponent<BoxCollider>());
             }
@@ -148,7 +154,7 @@ namespace GoogleARCore.Examples.HelloAR
 
             myPrefab.name = "Track#" + trackNumber;
             trackNumber++;
-            myPrefab.transform.parent = anchor.transform;
+            
         }
 
         /// <summary>
