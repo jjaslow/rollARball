@@ -43,14 +43,14 @@ namespace GoogleARCore.Examples.HelloAR
         public GameObject DetectedPlanePrefab;
         Anchor anchor;
 
-        //public GameObject myPrefab;
         public GameObject myBall;
-        public GameObject myTrack;
+        public GameObject[] myTrack = new GameObject[3];
 
         public int trackNumber = 0;
         bool gameStarted = false;
         Vector3 trackStart;
         Quaternion trackRotation;
+        float nudgeBallUp = .15f;
 
         /// <summary>
         /// The rotation in degrees need to apply to model when the Andy model is placed.
@@ -62,6 +62,7 @@ namespace GoogleARCore.Examples.HelloAR
         /// </summary>
         private bool m_IsQuitting = false;
 
+  
         public void Update()
         {
             _UpdateApplicationLifecycle();            
@@ -90,31 +91,32 @@ namespace GoogleARCore.Examples.HelloAR
                 }
                 else
                 {
+                    DetectedPlane myPlane = hit.Trackable as DetectedPlane;
+                    Debug.Log("jj_plane rotation_B: " + myPlane.CenterPose.rotation.ToEuler().x * 100 + ", " + myPlane.CenterPose.rotation.ToEuler().y * 100 + ", " + myPlane.CenterPose.rotation.ToEuler().z * 100);
+
                     // Instantiate track at the hit pose.
                     trackStart = hit.Pose.position;
+                    trackStart.y += .05f; //raise track a bit off the floor
                     trackRotation = hit.Pose.rotation;
-                    trackRotation.y = 0;
-                    Debug.Log("hit position: " + trackStart + "  hit rotation: " + trackRotation.eulerAngles);
-                    GameObject myPrefab = Instantiate(myTrack, trackStart, trackRotation);  //hit.Pose.rotation 
-                    myPrefab.name = "Track#" + trackNumber;
+                    Debug.Log("jj_pose_a: "+ trackStart + ", " + trackRotation.ToEuler());
+                    trackRotation = Quaternion.Euler(0, -myPlane.CenterPose.rotation.ToEuler().y*2, 0)   ;
+                    Debug.Log("jj_pose_b: " + trackStart + ", " + trackRotation.ToEuler());
+                    GameObject nextTrack = Instantiate(myTrack[0], trackStart, trackRotation);  //hit.Pose.rotation 
+                    nextTrack.name = "Track#" + trackNumber;
                     trackNumber++;
 
                     // Create an anchor FOR TRACK to allow ARCore to track the hitpoint as understanding of the physical
                     // world evolves.
                     Pose anchorPose = new Pose(trackStart, trackRotation);
                     anchor = hit.Trackable.CreateAnchor(anchorPose);
-                    Debug.Log("Anchor Pose: " + anchor.transform.position + anchor.transform.rotation.eulerAngles);
 
-                    // Make myBall model a child of the anchor.
-                    Debug.Log("track pose b4 anchor: " + myPrefab.transform.position + myPrefab.transform.rotation.eulerAngles);
-                    myPrefab.transform.parent = anchor.transform;
-                    Debug.Log("track pose after anchor: " + myPrefab.transform.position + myPrefab.transform.rotation.eulerAngles);
+                    // Make track a child of the anchor.
+                    nextTrack.transform.parent = anchor.transform;
 
 
                     // Instantiate ball at the hit pose.
-                    float nudgeUp = .05f;   //0.05
-                    Vector3 nudgedPosition = new Vector3(trackStart.x, trackStart.y + nudgeUp, trackStart.z);
-                    GameObject myPrefab2 = Instantiate(myBall, nudgedPosition, trackRotation);  //hit.Pose.rotation   (new idea, rotation = camera.forward?)
+                    Vector3 nudgedPosition = new Vector3(trackStart.x, trackStart.y + nudgeBallUp, trackStart.z);
+                    GameObject newBall = Instantiate(myBall, nudgedPosition, trackRotation);  //hit.Pose.rotation   (new idea, rotation = camera.forward?)
 
                     gameStarted = true;
                 }
@@ -123,36 +125,57 @@ namespace GoogleARCore.Examples.HelloAR
         
         public void ReloadBall()
         {
-            float nudgeUp = .05f;
-            Vector3 nudgedPosition = new Vector3(trackStart.x, trackStart.y + nudgeUp, trackStart.z);
-            GameObject myPrefab2 = Instantiate(myBall, nudgedPosition, trackRotation);  //hit.Pose.rotation   (new idea, rotation = camera.forward?)
-            Debug.Log("Reload " + myBall);
+            int currTrackNumber = trackNumber - 1;
+            string currTrackName = "Track#" + currTrackNumber.ToString();
+            GameObject currTrack = GameObject.Find(currTrackName);
 
+            Vector3 nudgedPosition = new Vector3(currTrack.transform.position.x, currTrack.transform.position.y + nudgeBallUp, currTrack.transform.position.z);
+            GameObject newBall = Instantiate(myBall, nudgedPosition, Quaternion.identity);  //hit.Pose.rotation   (new idea, rotation = camera.forward?)
         }
 
 
         public void NewTrack(Collider coll)
         {
-            Debug.Log("trigger: " + coll.name);
-            float newTrackPositionAdjust;
-            float trackLength = coll.gameObject.transform.parent.GetComponent<Collider>().bounds.extents.z;
-            Debug.Log("track length: " + trackLength);
-            newTrackPositionAdjust = coll.name == "TriggerF" ? trackLength*2 : trackLength*-2; //length of track piece
+            //Debug.Log("trigger: " + coll.name);
+            int childTriggerToDestroy, originTrackInstantiatePoint, newTrackInstantiatePoint;
 
-            GameObject myPrefab = Instantiate(myTrack, coll.gameObject.transform.parent.position, coll.gameObject.transform.parent.rotation);
-            myPrefab.transform.parent = anchor.transform;
-            myPrefab.transform.Translate(Vector3.forward * newTrackPositionAdjust);
-
-            if (coll.name == "TriggerF") //destroy back trigger on new track
+            if (coll.name == "TriggerF") //destroy back trigger on new track and instantiate at front transform
             {
-                Destroy(myPrefab.gameObject.transform.GetChild(1).GetComponent<BoxCollider>());
+                childTriggerToDestroy = 1;
+                originTrackInstantiatePoint = 2;
+                newTrackInstantiatePoint = 3;
             }
-            else  //destroy front trigger on new track
+            else  //destroy front trigger on new track and instantiate at back transform
             {
-                Destroy(myPrefab.gameObject.transform.GetChild(0).GetComponent<BoxCollider>());
+                childTriggerToDestroy = 1;
+                originTrackInstantiatePoint = 3;
+                newTrackInstantiatePoint = 3;
             }
 
-            myPrefab.name = "Track#" + trackNumber;
+
+            //instantiate new track piece
+            int i = Random.Range(0, myTrack.Length);
+            GameObject nextTrack = Instantiate(myTrack[i], coll.gameObject.transform.parent.GetChild(originTrackInstantiatePoint).position, coll.gameObject.transform.parent.GetChild(originTrackInstantiatePoint).rotation);
+
+            /*if(nextTrack.GetComponent<MeshFilter>().mesh.bounds.center.z==0)
+            {
+                nextTrack.transform.Translate(Vector3.forward * nextTrack.GetComponent<MeshFilter>().mesh.bounds.extents.z/2);
+            }*/
+            Vector3 newStartPosition = nextTrack.transform.GetChild(newTrackInstantiatePoint).position;
+            Vector3 oldEndPosition = coll.gameObject.transform.parent.GetChild(originTrackInstantiatePoint).position;
+            float moveDistance = Vector3.Distance(newStartPosition, oldEndPosition);
+            Debug.Log("jj_" + nextTrack.name + ": " + newStartPosition.x *100 + ", " + newStartPosition.y * 100 + ", " + newStartPosition.z * 100 + " // " + oldEndPosition.x*100 + ", " + oldEndPosition.y * 100 + ", " + oldEndPosition.z * 100);
+            Debug.Log(" jj_distance: " + moveDistance);
+            //Vector3 movePosition = oldEndPosition - newStartPosition;
+            //nextTrack.transform.Translate(Vector3.forward * (Mathf.Abs(movePosition.x) + Mathf.Abs(movePosition.y) + Mathf.Abs(movePosition.z)));
+            //nextTrack.transform.Translate(Vector3.forward * Mathf.Abs(movePosition.x + movePosition.y + movePosition.z));
+            nextTrack.transform.Translate(Vector3.forward * moveDistance);
+
+            Destroy(nextTrack.gameObject.transform.GetChild(childTriggerToDestroy).GetComponent<BoxCollider>());
+
+            nextTrack.transform.parent = anchor.transform;
+
+            nextTrack.name = "Track#" + trackNumber;
             trackNumber++;
             
         }

@@ -7,8 +7,7 @@ using UnityEngine.UI;
 public class MasterUI : MonoBehaviour
 {
     public MasterController MCScript;
-    public GameObject myTrack;
-    public GameObject myBall;
+    public CheckFeaturePoints CFP;
     Text testingText;
 
     private void Start()
@@ -19,19 +18,12 @@ public class MasterUI : MonoBehaviour
 
     private void FixedUpdate()
     {
-        testingText.text = Mathf.Floor(Input.acceleration.x * 100) / 100 + " \n " + Mathf.Floor(Input.acceleration.y * 100) / 100 + " \n " + Mathf.Floor(Input.acceleration.z * 100) / 100;
+        testingText.text = Mathf.Floor(Input.acceleration.x * 100) / 100 + "\n" + Mathf.Floor(Input.acceleration.y * 100) / 100 + "\n" + Mathf.Floor(Input.acceleration.z * 100) / 100 + "\n" + CFP.numberOfPoints;
     }
 
     public void ReloadBall() //now reload
     {
-        //MCScript.myPrefab = myTrack;
-        //MCScript.nudge = 0;
         MCScript.ReloadBall();
     }
 
-    public void SetBallAsPrefab()
-    {
-        //MCScript.myPrefab = myBall;
-        //MCScript.nudge = 0.05f;
-    }
 }
