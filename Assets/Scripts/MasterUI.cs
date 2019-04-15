@@ -18,7 +18,13 @@ public class MasterUI : MonoBehaviour
 
     private void FixedUpdate()
     {
-        testingText.text = Mathf.Floor(Input.acceleration.x * 100) / 100 + "\n" + Mathf.Floor(Input.acceleration.y * 100) / 100 + "\n" + Mathf.Floor(Input.acceleration.z * 100) / 100 + "\n" + CFP.numberOfPoints;
+        //testingText.text = Mathf.Floor(Input.acceleration.x * 100) / 100 + "\n" + Mathf.Floor(Input.acceleration.y * 100) / 100 + "\n" + Mathf.Floor(Input.acceleration.z * 100) / 100 + "\n" + CFP.numberOfPoints;
+
+        testingText.text = 
+            CFP.PointsAngleA + "\n" +
+            CFP.PointsAngleB + "\n" +
+            CFP.PointsAngleC + "\n" + 
+            CFP.numberOfPoints;
     }
 
     public void ReloadBall() //now reload

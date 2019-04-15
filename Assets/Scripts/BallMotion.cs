@@ -27,7 +27,7 @@ public class BallMotion : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (transform.position.y < -5)  //based on gravity
+        if (transform.position.y < -2.5)  //based on gravity
         {
             Destroy(gameObject);
             return;

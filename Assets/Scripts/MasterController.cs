@@ -36,6 +36,7 @@ namespace GoogleARCore.Examples.HelloAR
     public class MasterController : MonoBehaviour
     {
         public Camera FirstPersonCamera;
+        CheckFeaturePoints CFP;
 
         /// <summary>
         /// A prefab for tracking and visualizing detected planes.
@@ -50,7 +51,7 @@ namespace GoogleARCore.Examples.HelloAR
         bool gameStarted = false;
         Vector3 trackStart;
         Quaternion trackRotation;
-        float nudgeBallUp = .15f;
+        float nudgeBallUp = .1f;
 
         /// <summary>
         /// The rotation in degrees need to apply to model when the Andy model is placed.
@@ -62,7 +63,12 @@ namespace GoogleARCore.Examples.HelloAR
         /// </summary>
         private bool m_IsQuitting = false;
 
-  
+        private void Start()
+        {
+            CFP = GetComponent<CheckFeaturePoints>();
+        }
+
+
         public void Update()
         {
             _UpdateApplicationLifecycle();            
@@ -92,27 +98,31 @@ namespace GoogleARCore.Examples.HelloAR
                 else
                 {
                     DetectedPlane myPlane = hit.Trackable as DetectedPlane;
-                    Debug.Log("jj_plane rotation_B: " + myPlane.CenterPose.rotation.ToEuler().x * 100 + ", " + myPlane.CenterPose.rotation.ToEuler().y * 100 + ", " + myPlane.CenterPose.rotation.ToEuler().z * 100);
+                    Debug.Log("jj_plane rotation_B: " + myPlane.CenterPose.rotation.eulerAngles);
 
                     // Instantiate track at the hit pose.
                     trackStart = hit.Pose.position;
-                    trackStart.y += .05f; //raise track a bit off the floor
+                    trackStart.y += .025f; //raise track a bit off the floor
                     trackRotation = hit.Pose.rotation;
-                    Debug.Log("jj_pose_a: "+ trackStart + ", " + trackRotation.ToEuler());
-                    trackRotation = Quaternion.Euler(0, -myPlane.CenterPose.rotation.ToEuler().y*2, 0)   ;
-                    Debug.Log("jj_pose_b: " + trackStart + ", " + trackRotation.ToEuler());
-                    GameObject nextTrack = Instantiate(myTrack[0], trackStart, trackRotation);  //hit.Pose.rotation 
+                    Debug.Log("jj_pose_a: "+ trackStart + ", " + trackRotation.eulerAngles);
+                    GameObject nextTrack = Instantiate(myTrack[1], trackStart, Quaternion.Euler(0, FirstPersonCamera.transform.rotation.y, 0));  //trackStart, trackRotation   //hit.Pose.rotation 
                     nextTrack.name = "Track#" + trackNumber;
                     trackNumber++;
 
                     // Create an anchor FOR TRACK to allow ARCore to track the hitpoint as understanding of the physical
                     // world evolves.
-                    Pose anchorPose = new Pose(trackStart, trackRotation);
-                    anchor = hit.Trackable.CreateAnchor(anchorPose);
+                    //Pose anchorPose = new Pose(trackStart, trackRotation);
+                    anchor = hit.Trackable.CreateAnchor(hit.Pose);   //anchorpose
 
                     // Make track a child of the anchor.
                     nextTrack.transform.parent = anchor.transform;
 
+                    // Make sure track is pointing forward
+                    /*float trackRotationFix = anchor.transform.rotation.eulerAngles.y *-1;
+                    Vector3 trackRotationTurn = new Vector3(0, trackRotationFix, 0);
+                    Debug.Log(nextTrack.transform.rotation.eulerAngles);
+                    nextTrack.transform.Rotate(trackRotationTurn, Space.World);
+                    Debug.Log(nextTrack.transform.rotation.eulerAngles);*/
 
                     // Instantiate ball at the hit pose.
                     Vector3 nudgedPosition = new Vector3(trackStart.x, trackStart.y + nudgeBallUp, trackStart.z);
@@ -154,7 +164,9 @@ namespace GoogleARCore.Examples.HelloAR
 
 
             //instantiate new track piece
-            int i = Random.Range(0, myTrack.Length);
+            //int i = Random.Range(0, myTrack.Length);
+            int i = CFP.InitializePointsCheck();
+            Debug.Log("jj_track: "+i);
             GameObject nextTrack = Instantiate(myTrack[i], coll.gameObject.transform.parent.GetChild(originTrackInstantiatePoint).position, coll.gameObject.transform.parent.GetChild(originTrackInstantiatePoint).rotation);
 
             /*if(nextTrack.GetComponent<MeshFilter>().mesh.bounds.center.z==0)
@@ -164,7 +176,7 @@ namespace GoogleARCore.Examples.HelloAR
             Vector3 newStartPosition = nextTrack.transform.GetChild(newTrackInstantiatePoint).position;
             Vector3 oldEndPosition = coll.gameObject.transform.parent.GetChild(originTrackInstantiatePoint).position;
             float moveDistance = Vector3.Distance(newStartPosition, oldEndPosition);
-            Debug.Log("jj_" + nextTrack.name + ": " + newStartPosition.x *100 + ", " + newStartPosition.y * 100 + ", " + newStartPosition.z * 100 + " // " + oldEndPosition.x*100 + ", " + oldEndPosition.y * 100 + ", " + oldEndPosition.z * 100);
+            Debug.Log("jj_" + nextTrack.name + ": " + newStartPosition.x + ", " + newStartPosition.y + ", " + newStartPosition.z + " // " + oldEndPosition.x+ ", " + oldEndPosition.y + ", " + oldEndPosition.z);
             Debug.Log(" jj_distance: " + moveDistance);
             //Vector3 movePosition = oldEndPosition - newStartPosition;
             //nextTrack.transform.Translate(Vector3.forward * (Mathf.Abs(movePosition.x) + Mathf.Abs(movePosition.y) + Mathf.Abs(movePosition.z)));
