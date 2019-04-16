@@ -30,6 +30,7 @@ public class BallMotion : MonoBehaviour
         if (transform.position.y < -2.5)  //based on gravity
         {
             Destroy(gameObject);
+            MCScript.numbOfBalls -= 1;
             return;
         }
 
