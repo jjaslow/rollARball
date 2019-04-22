@@ -8,6 +8,7 @@ public class CheckFeaturePoints : MonoBehaviour
 {
     public int numberOfPoints;
     public MasterController MCScript;
+    public BallMotion BallMotion;
 
     //points for angles in degree ranges from 0-60-120-180
     public bool PointsAngleA;
@@ -52,10 +53,12 @@ public class CheckFeaturePoints : MonoBehaviour
     void CheckPoint(Vector3 PointPosition, int i, int originTrackInstantiatePoint)
     {
         //get track we are on that needs new extension
-        int currTrackNumber = MCScript.trackNumber - 1;
+        /*int currTrackNumber = MCScript.trackNumber - 1;
         string currTrackName = "Track#" + currTrackNumber.ToString();
         Debug.Log("JJ_curr Track: " + currTrackName);
-        GameObject currTrack = GameObject.Find(currTrackName);
+        GameObject currTrack = GameObject.Find(currTrackName);*/
+        GameObject currTrack = BallMotion.lastTrackTouched;
+
 
         //get angle, height and distance from end of current track
         Vector3 targetDir = new Vector3(PointPosition.x, 0, PointPosition.z) - new Vector3(currTrack.transform.GetChild(originTrackInstantiatePoint).position.x, 0, currTrack.transform.GetChild(originTrackInstantiatePoint).position.z); //other being feature point

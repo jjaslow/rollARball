@@ -822,6 +822,7 @@
     <Compile Include="Assets\GoogleARCore\SDK\Scripts\XPSessionStatus.cs" />
     <Compile Include="Assets\GoogleARCore\SDK\Scripts\XPTrackingState.cs" />
     <Compile Include="Assets\Scripts\BallMotion.cs" />
+    <Compile Include="Assets\Scripts\CheckFeaturePoints.cs" />
     <Compile Include="Assets\Scripts\MasterController.cs" />
     <Compile Include="Assets\Scripts\MasterUI.cs" />
     <Compile Include="Assets\Scripts\testing.cs" />

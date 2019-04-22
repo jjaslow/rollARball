@@ -37,6 +37,8 @@ namespace GoogleARCore.Examples.HelloAR
     {
         public Camera FirstPersonCamera;
         CheckFeaturePoints CFP;
+        public BallMotion BallMotion;
+        public TestPhoneTilt TestPhoneTilt;
 
         /// <summary>
         /// A prefab for tracking and visualizing detected planes.
@@ -50,7 +52,7 @@ namespace GoogleARCore.Examples.HelloAR
         public int trackNumber = 0;
         bool gameStarted = false;
         Vector3 trackStart;
-        Quaternion trackRotation;
+        //Quaternion trackRotation;
         float nudgeBallUp = .1f;
         public int numbOfBalls;
 
@@ -99,37 +101,29 @@ namespace GoogleARCore.Examples.HelloAR
                 }
                 else
                 {
-                    DetectedPlane myPlane = hit.Trackable as DetectedPlane;
-                    Debug.Log("jj_plane rotation_B: " + myPlane.CenterPose.rotation.eulerAngles);
+                    if(!TestPhoneTilt.CheckTilt()) return;
+                    //DetectedPlane myPlane = hit.Trackable as DetectedPlane;
+                    //Debug.Log("jj_plane rotation_B: " + myPlane.CenterPose.rotation.eulerAngles);
 
                     // Instantiate track at the hit pose.
                     trackStart = hit.Pose.position;
                     trackStart.y += .025f; //raise track a bit off the floor
-                    trackRotation = hit.Pose.rotation;
-                    Debug.Log("jj_pose_a: "+ trackStart + ", " + trackRotation.eulerAngles);
-                    GameObject nextTrack = Instantiate(myTrack[1], trackStart, Quaternion.Euler(0, FirstPersonCamera.transform.rotation.y, 0));  //trackStart, trackRotation   //hit.Pose.rotation 
+                    GameObject nextTrack = Instantiate(myTrack[1], trackStart, Quaternion.Euler(0, FirstPersonCamera.transform.rotation.y, 0)); 
                     nextTrack.name = "Track#" + trackNumber;
                     trackNumber++;
 
                     // Create an anchor FOR TRACK to allow ARCore to track the hitpoint as understanding of the physical
                     // world evolves.
-                    //Pose anchorPose = new Pose(trackStart, trackRotation);
-                    anchor = hit.Trackable.CreateAnchor(hit.Pose);   //anchorpose
+                    Pose anchorPose = new Pose(trackStart, Quaternion.Euler(0, FirstPersonCamera.transform.rotation.y, 0));
+                    anchor = hit.Trackable.CreateAnchor(anchorPose);   //anchorpose
 
                     // Make track a child of the anchor.
                     nextTrack.transform.parent = anchor.transform;
 
-                    // Make sure track is pointing forward
-                    /*float trackRotationFix = anchor.transform.rotation.eulerAngles.y *-1;
-                    Vector3 trackRotationTurn = new Vector3(0, trackRotationFix, 0);
-                    Debug.Log(nextTrack.transform.rotation.eulerAngles);
-                    nextTrack.transform.Rotate(trackRotationTurn, Space.World);
-                    Debug.Log(nextTrack.transform.rotation.eulerAngles);*/
-
                     // Instantiate ball at the hit pose.
-                    Vector3 nudgedPosition = new Vector3(trackStart.x, trackStart.y + nudgeBallUp, trackStart.z);
-                    GameObject newBall = Instantiate(myBall, nudgedPosition, trackRotation);  //hit.Pose.rotation   (new idea, rotation = camera.forward?)
-                    numbOfBalls += 1;
+                    /*Vector3 nudgedPosition = new Vector3(trackStart.x, trackStart.y + nudgeBallUp, trackStart.z);
+                    GameObject newBall = Instantiate(myBall, nudgedPosition, Quaternion.Euler(0, FirstPersonCamera.transform.rotation.y, 0));  //hit.Pose.rotation   (new idea, rotation = camera.forward?)
+                    numbOfBalls += 1;*/
 
                     gameStarted = true;
                 }
@@ -138,14 +132,29 @@ namespace GoogleARCore.Examples.HelloAR
         
         public void ReloadBall()
         {
-            if (numbOfBalls > 0) return;
+            if (numbOfBalls > 0 || !gameStarted) return;
 
-            int currTrackNumber = trackNumber - 1;
+            /*int currTrackNumber = trackNumber - 1;
             string currTrackName = "Track#" + currTrackNumber.ToString();
-            GameObject currTrack = GameObject.Find(currTrackName);
+            GameObject currTrack = GameObject.Find(currTrackName);*/
 
-            Vector3 nudgedPosition = new Vector3(currTrack.transform.position.x, currTrack.transform.position.y + nudgeBallUp, currTrack.transform.position.z);
-            GameObject newBall = Instantiate(myBall, nudgedPosition, Quaternion.identity);  //hit.Pose.rotation   (new idea, rotation = camera.forward?)
+            Vector3 currTrackPosition = new Vector3();
+            if (BallMotion.ballsCreated == 0)
+            {
+                currTrackPosition = trackStart;
+                Debug.Log("jj_trackstart");
+            }
+
+            else
+            {
+                currTrackPosition = BallMotion.lastTrackTouched.transform.position;
+                Debug.Log("jj_lastTrackTouched");
+            }
+            
+            Debug.Log("jj_currTrackPosition_b: " + currTrackPosition);
+
+            Vector3 nudgedPosition = new Vector3(currTrackPosition.x, currTrackPosition.y + nudgeBallUp, currTrackPosition.z);
+            GameObject newBall = Instantiate(myBall, nudgedPosition, Quaternion.Euler(0, FirstPersonCamera.transform.rotation.y, 0));  //hit.Pose.rotation   (new idea, rotation = camera.forward?)
             numbOfBalls += 1;
         }
 
@@ -154,6 +163,7 @@ namespace GoogleARCore.Examples.HelloAR
         {
             Debug.Log("JJ_trigger: " + coll.name);
             int childTriggerToDestroy, originTrackInstantiatePoint, newTrackInstantiatePoint;
+            GameObject ColliderParent = coll.gameObject.transform.parent.gameObject;
 
             if (coll.name == "TriggerF") //destroy back trigger on new track and instantiate at front transform
             {
@@ -168,7 +178,6 @@ namespace GoogleARCore.Examples.HelloAR
                 newTrackInstantiatePoint = 3;
             }
 
-
             //instantiate new track piece
             //int i = Random.Range(0, myTrack.Length);
             int i = CFP.InitializePointsCheck(originTrackInstantiatePoint);
@@ -181,27 +190,31 @@ namespace GoogleARCore.Examples.HelloAR
             }
             else if(i==0)//left (then straight)
             {
-                BuildNewTrack(coll, i, childTriggerToDestroy, originTrackInstantiatePoint, newTrackInstantiatePoint);
+                GameObject returnTrack = BuildNewTrack(ColliderParent, i, childTriggerToDestroy, originTrackInstantiatePoint, newTrackInstantiatePoint);
+                Destroy(returnTrack.gameObject.transform.GetChild(0).GetComponent<BoxCollider>());
+                BuildNewTrack(returnTrack, 2, childTriggerToDestroy, originTrackInstantiatePoint, newTrackInstantiatePoint);
             }
             else if (i == 2)//right (then straight)
             {
-                BuildNewTrack(coll, i, childTriggerToDestroy, originTrackInstantiatePoint, newTrackInstantiatePoint);
+                GameObject returnTrack = BuildNewTrack(ColliderParent, i, childTriggerToDestroy, originTrackInstantiatePoint, newTrackInstantiatePoint);
+                Destroy(returnTrack.gameObject.transform.GetChild(0).GetComponent<BoxCollider>());
+                BuildNewTrack(returnTrack, 0, childTriggerToDestroy, originTrackInstantiatePoint, newTrackInstantiatePoint);
             }
             else if (i == 1)//straight
             {
-                BuildNewTrack(coll, i, childTriggerToDestroy, originTrackInstantiatePoint, newTrackInstantiatePoint);
+                BuildNewTrack(ColliderParent, i, childTriggerToDestroy, originTrackInstantiatePoint, newTrackInstantiatePoint);
             }
 
 
 
         }
 
-        private void BuildNewTrack(Collider coll, int i, int childTriggerToDestroy, int originTrackInstantiatePoint, int newTrackInstantiatePoint)
+        private GameObject BuildNewTrack(GameObject GO, int i, int childTriggerToDestroy, int originTrackInstantiatePoint, int newTrackInstantiatePoint)
         {
-            GameObject nextTrack = Instantiate(myTrack[i], coll.gameObject.transform.parent.GetChild(originTrackInstantiatePoint).position, coll.gameObject.transform.parent.GetChild(originTrackInstantiatePoint).rotation);
+            GameObject nextTrack = Instantiate(myTrack[i], GO.transform.GetChild(originTrackInstantiatePoint).position, GO.transform.GetChild(originTrackInstantiatePoint).rotation);
 
             Vector3 newStartPosition = nextTrack.transform.GetChild(newTrackInstantiatePoint).position;
-            Vector3 oldEndPosition = coll.gameObject.transform.parent.GetChild(originTrackInstantiatePoint).position;
+            Vector3 oldEndPosition = GO.transform.GetChild(originTrackInstantiatePoint).position;
             float moveDistance = Vector3.Distance(newStartPosition, oldEndPosition);
 
             Debug.Log("jj_" + nextTrack.name + ": " + newStartPosition.x + ", " + newStartPosition.y + ", " + newStartPosition.z + " // " + oldEndPosition.x + ", " + oldEndPosition.y + ", " + oldEndPosition.z);
@@ -215,6 +228,7 @@ namespace GoogleARCore.Examples.HelloAR
 
             nextTrack.name = "Track#" + trackNumber;
             trackNumber++;
+            return nextTrack;
         }
 
         /// <summary>
@@ -271,7 +285,7 @@ namespace GoogleARCore.Examples.HelloAR
         /// Show an Android toast message.
         /// </summary>
         /// <param name="message">Message string to show in the toast.</param>
-        private void _ShowAndroidToastMessage(string message)
+        public void _ShowAndroidToastMessage(string message)
         {
             AndroidJavaClass unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
             AndroidJavaObject unityActivity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");

@@ -7,18 +7,23 @@ public class BallMotion : MonoBehaviour
 {
 
     public float smooth;
-    private Vector3 currentAcceleration, initialAcceleration;
-    private float initialXAcceleration, initialYAcceleration;
-    RaycastHit hit;
+    //private Vector3 currentAcceleration;
+    static Vector3 initialAcceleration;
+    //private float initialXAcceleration, initialYAcceleration;
+    //RaycastHit hit;
     MasterController MCScript;
     private Rigidbody RB;
+    public static int ballsCreated = 0;
+    public static GameObject lastTrackTouched;
 
     void Start()
     {
-        initialAcceleration = Input.acceleration;
-        currentAcceleration = Vector3.zero;
-        initialXAcceleration = Input.acceleration.x;
-        initialYAcceleration = Input.acceleration.y;
+        ballsCreated++;
+        if (ballsCreated <= 1)
+        {
+            initialAcceleration = Input.acceleration;
+        }
+        //currentAcceleration = Vector3.zero;
         smooth = 0.75f;
         MCScript = GameObject.Find("Example Controller").GetComponent<MasterController>();
         RB = GetComponent<Rigidbody>();
@@ -27,6 +32,13 @@ public class BallMotion : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        RaycastHit lastTrackHit;
+        Debug.DrawRay(transform.position, Vector3.down * 2, Color.red);
+        if (Physics.Raycast(transform.position, Vector3.down, out lastTrackHit))  //no gravity, based on looking down to see track
+        {
+            lastTrackTouched = lastTrackHit.transform.gameObject;
+        }
+
         if (transform.position.y < -2.5)  //based on gravity
         {
             Destroy(gameObject);
@@ -63,6 +75,9 @@ public class BallMotion : MonoBehaviour
     {
 
         Vector3 motion = Input.acceleration;
+        motion.y -= initialAcceleration.y;
+        motion.y = Mathf.Clamp(motion.y, -.5f, .5f);
+        Debug.Log("jj_motion: " + motion);
         RB.AddForce(Mathf.Floor(motion.x*100)/100 * smooth, 0, Mathf.Floor(motion.y*100)/ 100 * smooth);
     }
 
