@@ -309,8 +309,9 @@ MonoBehaviour:
   - {fileID: 1438108075421062, guid: 1e8f39fc8cb28fc4a9cca8c364c6f0ef, type: 3}
   - {fileID: 1543456513668860, guid: 10d7484aab1bb8c4c8186670e1ac84d2, type: 3}
   - {fileID: 2480265477342035362, guid: befb9a6418e2bf4439d2b317b8f87c81, type: 3}
+  - {fileID: 5824243007564257164, guid: 371227a7808c96240940f4d1f316e582, type: 3}
   trackNumber: 0
-  numbOfBalls: 0
+  numBallsOnTrack: 0
 --- !u!114 &627916104
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -356,6 +357,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ced3ac57e9fdbb14f8eb2f8957a61898, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  MCScript: {fileID: 627916103}
 --- !u!1001 &688001843
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -58,14 +58,15 @@ public class CheckFeaturePoints : MonoBehaviour
         Debug.Log("JJ_curr Track: " + currTrackName);
         GameObject currTrack = GameObject.Find(currTrackName);*/
         GameObject currTrack = BallMotion.lastTrackTouched;
-
+        Debug.Log("JJ_curr Track: " + currTrack);
 
         //get angle, height and distance from end of current track
+        Debug.Log("JJ_point position: " + PointPosition);
         Vector3 targetDir = new Vector3(PointPosition.x, 0, PointPosition.z) - new Vector3(currTrack.transform.GetChild(originTrackInstantiatePoint).position.x, 0, currTrack.transform.GetChild(originTrackInstantiatePoint).position.z); //other being feature point
         float angle = Vector3.SignedAngle(currTrack.transform.GetChild(originTrackInstantiatePoint).forward, targetDir, Vector3.up);
         float height = PointPosition.y - currTrack.transform.position.y;
         float distance = Vector3.Distance(PointPosition, currTrack.transform.GetChild(originTrackInstantiatePoint).position);
-        Debug.Log("jj_Point " + i + ": " + "angle: " + angle + ", height: " + height + ", distance: " + distance);
+        //Debug.Log("jj_Point " + i + ": " + "angle: " + angle + ", height: " + height + ", distance: " + distance);
 
         if (distance > .5f || height < 0.05f) return;   //if point to far away or shorter than 2" up then that point is not in our way
         else if(angle >= 0 || angle <= 60)

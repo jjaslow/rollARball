@@ -47,14 +47,14 @@ namespace GoogleARCore.Examples.HelloAR
         Anchor anchor;
 
         public GameObject myBall;
-        public GameObject[] myTrack = new GameObject[3];
+        public GameObject[] myTrack = new GameObject[4];
 
         public int trackNumber = 0;
         bool gameStarted = false;
         Vector3 trackStart;
         //Quaternion trackRotation;
         float nudgeBallUp = .1f;
-        public int numbOfBalls;
+        public int numBallsOnTrack;
 
         /// <summary>
         /// The rotation in degrees need to apply to model when the Andy model is placed.
@@ -69,7 +69,7 @@ namespace GoogleARCore.Examples.HelloAR
         private void Start()
         {
             CFP = GetComponent<CheckFeaturePoints>();
-            numbOfBalls = 0;
+            numBallsOnTrack = 0;
         }
 
 
@@ -114,16 +114,16 @@ namespace GoogleARCore.Examples.HelloAR
 
                     // Create an anchor FOR TRACK to allow ARCore to track the hitpoint as understanding of the physical
                     // world evolves.
-                    Pose anchorPose = new Pose(trackStart, Quaternion.Euler(0, FirstPersonCamera.transform.rotation.y, 0));
+                    Pose anchorPose = new Pose(trackStart, nextTrack.transform.rotation);
                     anchor = hit.Trackable.CreateAnchor(anchorPose);   //anchorpose
 
                     // Make track a child of the anchor.
                     nextTrack.transform.parent = anchor.transform;
 
                     // Instantiate ball at the hit pose.
-                    /*Vector3 nudgedPosition = new Vector3(trackStart.x, trackStart.y + nudgeBallUp, trackStart.z);
-                    GameObject newBall = Instantiate(myBall, nudgedPosition, Quaternion.Euler(0, FirstPersonCamera.transform.rotation.y, 0));  //hit.Pose.rotation   (new idea, rotation = camera.forward?)
-                    numbOfBalls += 1;*/
+                    Vector3 nudgedPosition = new Vector3(trackStart.x, trackStart.y + nudgeBallUp, trackStart.z);
+                    GameObject newBall = Instantiate(myBall, nudgedPosition, nextTrack.transform.rotation);  //hit.Pose.rotation   (new idea, rotation = camera.forward?)
+                    numBallsOnTrack += 1;
 
                     gameStarted = true;
                 }
@@ -132,14 +132,10 @@ namespace GoogleARCore.Examples.HelloAR
         
         public void ReloadBall()
         {
-            if (numbOfBalls > 0 || !gameStarted) return;
-
-            /*int currTrackNumber = trackNumber - 1;
-            string currTrackName = "Track#" + currTrackNumber.ToString();
-            GameObject currTrack = GameObject.Find(currTrackName);*/
+            if (numBallsOnTrack > 0 || !gameStarted) return;
 
             Vector3 currTrackPosition = new Vector3();
-            if (BallMotion.ballsCreated == 0)
+            if (BallMotion.totalBallsCreated == 0)
             {
                 currTrackPosition = trackStart;
                 Debug.Log("jj_trackstart");
@@ -155,7 +151,7 @@ namespace GoogleARCore.Examples.HelloAR
 
             Vector3 nudgedPosition = new Vector3(currTrackPosition.x, currTrackPosition.y + nudgeBallUp, currTrackPosition.z);
             GameObject newBall = Instantiate(myBall, nudgedPosition, Quaternion.Euler(0, FirstPersonCamera.transform.rotation.y, 0));  //hit.Pose.rotation   (new idea, rotation = camera.forward?)
-            numbOfBalls += 1;
+            numBallsOnTrack += 1;
         }
 
 
@@ -188,21 +184,25 @@ namespace GoogleARCore.Examples.HelloAR
                 Debug.Log("GAME OVER");
                 return;
             }
-            else if(i==0)//left (then straight)
+            else if(i==0)//left (then right)
             {
                 GameObject returnTrack = BuildNewTrack(ColliderParent, i, childTriggerToDestroy, originTrackInstantiatePoint, newTrackInstantiatePoint);
                 Destroy(returnTrack.gameObject.transform.GetChild(0).GetComponent<BoxCollider>());
                 BuildNewTrack(returnTrack, 2, childTriggerToDestroy, originTrackInstantiatePoint, newTrackInstantiatePoint);
             }
-            else if (i == 2)//right (then straight)
+            else if (i == 2)//right (then left)
             {
                 GameObject returnTrack = BuildNewTrack(ColliderParent, i, childTriggerToDestroy, originTrackInstantiatePoint, newTrackInstantiatePoint);
                 Destroy(returnTrack.gameObject.transform.GetChild(0).GetComponent<BoxCollider>());
                 BuildNewTrack(returnTrack, 0, childTriggerToDestroy, originTrackInstantiatePoint, newTrackInstantiatePoint);
             }
-            else if (i == 1)//straight
+            else if (i == 1)//straight or loop
             {
-                BuildNewTrack(ColliderParent, i, childTriggerToDestroy, originTrackInstantiatePoint, newTrackInstantiatePoint);
+                int i2 = Random.Range(0, 2);
+                if(i2 == 0)
+                    BuildNewTrack(ColliderParent, 1, childTriggerToDestroy, originTrackInstantiatePoint, newTrackInstantiatePoint);
+                else
+                    BuildNewTrack(ColliderParent, 3, childTriggerToDestroy, originTrackInstantiatePoint, newTrackInstantiatePoint);
             }
 
 

@@ -1,61 +1,76 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using GoogleARCore.Examples.HelloAR;
 
 public class testing : MonoBehaviour
 {
-    public float smooth = 0.25f;
-    //public float newRotation;
-    //public float sensitivity = 6;
-    private Vector3 currentAcceleration, initialAcceleration;
-    //public GameObject bend, straight;
-    public Transform otherGO;
+    //MasterController MCScript;
+
+    private Rigidbody RB;
+    public float smooth;
+
+    public static int ballsCreated = 0;
+    public static GameObject lastTrackTouched;
 
     void Start()
     {
-        //initialAcceleration = Input.acceleration;
-        //currentAcceleration = Vector3.zero;
-        //Input.gyro.enabled = true;
-        /*Bounds bendBounds = bend.GetComponent<MeshRenderer>().bounds;
-        Bounds straightBounds = straight.GetComponent<MeshRenderer>().bounds;
+        ballsCreated++;
 
-        Debug.Log("bend center: " + bendBounds.center.x * 100 + ", " + bendBounds.center.y * 100 + ", " + bendBounds.center.z * 100);
-        Debug.Log("bend size: " + bendBounds.size.x * 100 + ", " + bendBounds.size.y * 100 + ", " + bendBounds.size.z * 100);
-        Debug.Log("bend extents: " + bendBounds.extents.x * 100 + ", " + bendBounds.extents.y * 100 + ", " + bendBounds.extents.z * 100);
-
-        Debug.Log("straight center: " + straightBounds.center.x * 100 + ", " + straightBounds.center.y * 100 + ", " + straightBounds.center.z * 100);
-        Debug.Log("straight size: " + straightBounds.size.x * 100 + ", " + straightBounds.size.y * 100 + ", " + straightBounds.size.z * 100);
-        Debug.Log("straight extents: " + straightBounds.extents.x * 100 + ", " + straightBounds.extents.y * 100 + ", " + straightBounds.extents.z * 100);
-        */
-
+        smooth = 0.75f;
+        //MCScript = GameObject.Find("Example Controller").GetComponent<MasterController>();
+        RB = GetComponent<Rigidbody>();
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (transform.position.y < -1)  //based on gravity
+        {
+            Destroy(gameObject);
+            //MCScript.numbOfBalls -= 1;
+        }
+    }
 
-        Vector3 targetDir = new Vector3(otherGO.position.x, 0, otherGO.position.z)  - new Vector3(transform.position.x, 0, transform.position.z); //other being feature point
-        float angle = Vector3.SignedAngle(transform.forward, targetDir, Vector3.up);
-        float height = otherGO.position.y - transform.position.y;
-        float distance = Vector3.Distance(otherGO.position, transform.position);
-        Debug.Log("angle: " + angle + ", height: " + height + ", distance: " + distance);
+    private void FixedUpdate()
+    {
+        RB.AddForce(Vector3.forward);
 
+        RaycastHit lastTrackHit;
+        Debug.DrawRay(transform.position, Vector3.down * 2, Color.red);
+        if (Physics.Raycast(transform.position, Vector3.down, out lastTrackHit))
+        {
+            lastTrackTouched = lastTrackHit.transform.gameObject;
+            Debug.Log(lastTrackTouched.name);
+            /*if (lastTrackTouched.tag == "loop")
+            {
+                RB.collisionDetectionMode = CollisionDetectionMode.Continuous;
+            }
+            else
+            {
+                RB.collisionDetectionMode = CollisionDetectionMode.Discrete;
+            }*/
+        }
 
-        //currentAcceleration = Vector3.Lerp(currentAcceleration, Input.acceleration - initialAcceleration, Time.deltaTime / smooth);
+    }
 
-        //transform.Translate(-currentAcceleration.y * Time.deltaTime, 0, currentAcceleration.x * Time.deltaTime); OLD ONE
-        //transform.Translate(Input.acceleration.x * Time.deltaTime, 0, Input.acceleration.y * Time.deltaTime);
-        //transform.Translate(currentAcceleration.x * Time.deltaTime, 0, currentAcceleration.y * Time.deltaTime);
-        //transform.Translate(Input.acceleration.x * smooth, 0, Input.acceleration.y * smooth);
-        //Debug.Log("input: " + Input.acceleration.x + " x " + Input.acceleration.y + " x " + Input.acceleration.z);
-        //Debug.Log("curr: "+ currentAcceleration.x + " x " + currentAcceleration.y + " x " + currentAcceleration.z);
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.tag == "boost")
+        {
+            Debug.Log("jj_boost: " + Vector3.Dot(RB.velocity.normalized, other.transform.up));
+            if (Vector3.Dot(RB.velocity.normalized, other.transform.up) > .5f)
+            {
+                RB.velocity = Vector3.zero;
+                RB.angularVelocity = Vector3.zero;
+                RB.AddForce(other.transform.up * 1000);
+            }
+        }
+        else
+        {
+            Destroy(other);
+            //MCScript.NewTrack(other);
+        }
 
-        //newRotation = Mathf.Clamp(currentAcceleration.x * sensitivity, -1, 1);
-        //transform.Rotate(0, 0, -newRotation);
-
-
-        //Vector3 initialPosition = transform.position;
-        //Vector3 tilt = new Vector3(Input.acceleration.x, 0, Input.acceleration.y);
-        //Debug.Log(Input.gyro.enabled);
     }
 }
